@@ -45,10 +45,21 @@ export default async function PersonalExpensesPage() {
     console.error("Failed to fetch personal expenses:", message)
   }
 
+  // Convert Date objects to ISO strings before passing to client component
+  const formattedExpenses =
+    expenses?.map(expense => ({
+      ...expense,
+      createdAt: expense.createdAt,
+      updatedAt: expense.updatedAt || null
+    })) || []
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">My Personal Expenses</h1>
-      <PersonalExpensesList userId={userId} initialExpenses={expenses || []} />
+      <PersonalExpensesList
+        userId={userId}
+        initialExpenses={formattedExpenses}
+      />
     </div>
   )
 }

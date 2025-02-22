@@ -36,20 +36,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
-
-interface Client {
-  id: string
-  userId: string
-  name: string
-  monthlySessions: number
-  sessionRate: number
-  createdAt?: string
-  updatedAt?: string
-}
+import type { SelectClient } from "../../../db/schema"
 
 interface ClientListProps {
   userId: string
-  initialClients: Client[]
+  initialClients: SelectClient[]
 }
 
 /**
@@ -64,7 +55,7 @@ export default function ClientList({
   initialClients
 }: ClientListProps) {
   // Local state for the client list
-  const [clients, setClients] = useState<Client[]>(initialClients)
+  const [clients, setClients] = useState<SelectClient[]>(initialClients)
 
   // Form state for creating a new client
   const [newName, setNewName] = useState("")
@@ -88,12 +79,14 @@ export default function ClientList({
 
     // Optimistic UI approach: create a temporary client
     const tempId = Date.now().toString()
-    const tempClient: Client = {
+    const tempClient: SelectClient = {
       id: tempId,
       userId,
       name: nameTrimmed,
       monthlySessions: newSessions,
-      sessionRate: newRate
+      sessionRate: newRate,
+      createdAt: new Date(),
+      updatedAt: null
     }
     setClients(prev => [...prev, tempClient])
 
@@ -110,7 +103,7 @@ export default function ClientList({
       sessionRate: newRate
     })
     if (!result.isSuccess) {
-      alert("Failed to create client: " + result.message)
+      alert(`Failed to create client: ${result.message}`)
       // revert
       setClients(prev => prev.filter(c => c.id !== tempId))
       return
@@ -118,7 +111,9 @@ export default function ClientList({
 
     // Update temp client with the real one from the DB
     const newClient = result.data
-    setClients(prev => prev.map(c => (c.id === tempId ? newClient : c)))
+    setClients(prev =>
+      newClient ? prev.map(c => (c.id === tempId ? newClient : c)) : prev
+    )
   }
 
   /**
@@ -149,7 +144,7 @@ export default function ClientList({
    */
   const handleUpdateField = (
     clientId: string,
-    field: keyof Client,
+    field: keyof SelectClient,
     value: string | number
   ) => {
     setClients(prev =>

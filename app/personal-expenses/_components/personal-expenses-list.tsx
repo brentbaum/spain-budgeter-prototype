@@ -27,19 +27,11 @@ import {
 } from "@/actions/db/personal-expenses-actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-interface PersonalExpense {
-  id: string
-  userId: string
-  description: string
-  cost: number
-  createdAt?: string
-  updatedAt?: string
-}
+import type { SelectPersonalExpense } from "../../../db/schema"
 
 interface PersonalExpensesListProps {
   userId: string
-  initialExpenses: PersonalExpense[]
+  initialExpenses: SelectPersonalExpense[]
 }
 
 /**
@@ -55,7 +47,8 @@ export default function PersonalExpensesList({
   initialExpenses
 }: PersonalExpensesListProps) {
   // Keep local copy of expenses
-  const [expenses, setExpenses] = useState<PersonalExpense[]>(initialExpenses)
+  const [expenses, setExpenses] =
+    useState<SelectPersonalExpense[]>(initialExpenses)
 
   // Form state for creating a new expense
   const [newDescription, setNewDescription] = useState("")
@@ -78,11 +71,13 @@ export default function PersonalExpensesList({
 
     // Optimistic UI: add a temporary expense
     const tempId = Date.now().toString()
-    const tempExpense: PersonalExpense = {
+    const tempExpense: SelectPersonalExpense = {
       id: tempId,
       userId,
       description: desc,
-      cost: newCost
+      cost: newCost,
+      createdAt: new Date(),
+      updatedAt: null
     }
 
     setExpenses(prev => [...prev, tempExpense])
@@ -102,7 +97,7 @@ export default function PersonalExpensesList({
     }
 
     // Replace temp with the newly created record from DB
-    const created = result.data
+    const created = result.data!
     setExpenses(prev => prev.map(e => (e.id === tempId ? created : e)))
   }
 
@@ -112,7 +107,7 @@ export default function PersonalExpensesList({
    */
   const handleUpdateField = (
     expenseId: string,
-    field: keyof PersonalExpense,
+    field: keyof SelectPersonalExpense,
     value: string | number
   ) => {
     setExpenses(prev =>

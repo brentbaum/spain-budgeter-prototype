@@ -25,19 +25,11 @@ import {
 } from "@/actions/db/professional-expenses-actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-interface ProfessionalExpense {
-  id: string
-  userId: string
-  description: string
-  cost: number
-  createdAt?: string
-  updatedAt?: string
-}
+import type { SelectProfessionalExpense } from "../../../db/schema"
 
 interface ProfessionalExpensesListProps {
   userId: string
-  initialExpenses: ProfessionalExpense[]
+  initialExpenses: SelectProfessionalExpense[]
 }
 
 /**
@@ -54,7 +46,7 @@ export default function ProfessionalExpensesList({
 }: ProfessionalExpensesListProps) {
   // Keep local array of expenses
   const [expenses, setExpenses] =
-    useState<ProfessionalExpense[]>(initialExpenses)
+    useState<SelectProfessionalExpense[]>(initialExpenses)
 
   // Form state for new expense creation
   const [newDescription, setNewDescription] = useState("")
@@ -76,11 +68,13 @@ export default function ProfessionalExpensesList({
     }
 
     const tempId = Date.now().toString()
-    const tempExpense: ProfessionalExpense = {
+    const tempExpense: SelectProfessionalExpense = {
       id: tempId,
       userId,
       description: desc,
-      cost: newCost
+      cost: newCost,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
 
     setExpenses(prev => [...prev, tempExpense])
@@ -109,7 +103,7 @@ export default function ProfessionalExpensesList({
    */
   const handleUpdateField = (
     expenseId: string,
-    field: keyof ProfessionalExpense,
+    field: keyof SelectProfessionalExpense,
     value: string | number
   ) => {
     setExpenses(prev =>
