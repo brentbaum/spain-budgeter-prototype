@@ -35,12 +35,12 @@
  *   - Edge cases like negative sessionRate or monthlySessions are possible; handle them at the UI layer.
  */
 
-"use server"
+"use server";
 
-import { db } from "@/db/db"
-import { clientsTable } from "@/db/schema/clients-schema"
-import { eq } from "drizzle-orm"
-import { ActionState } from "@/types"
+import { db } from "@/db/db";
+import { clientsTable, type SelectClient } from "@/db/schema/clients-schema";
+import { and, eq } from "drizzle-orm";
+import type { ActionState } from "@/types";
 
 /**
  * @interface CreateClientData
@@ -52,10 +52,10 @@ import { ActionState } from "@/types"
  * @property sessionRate       - Rate per session in currency units.
  */
 interface CreateClientData {
-  userId: string
-  name: string
-  monthlySessions: number
-  sessionRate: number
+	userId: string;
+	name: string;
+	monthlySessions: number;
+	sessionRate: number;
 }
 
 /**
@@ -65,31 +65,30 @@ interface CreateClientData {
  * @param data  - The data needed to create a client (name, monthlySessions, sessionRate).
  * @returns     - A promise resolving to an ActionState containing the new client record on success.
  */
-export async function createClientAction(
-  data: CreateClientData
-): Promise<ActionState<any>> {
-  try {
-    const [newClient] = await db
-      .insert(clientsTable)
-      .values({
-        userId: data.userId,
-        name: data.name,
-        monthlySessions: data.monthlySessions,
-        sessionRate: data.sessionRate
-      })
-      .returning()
-    return {
-      isSuccess: true,
-      message: "Client created successfully",
-      data: newClient
-    }
-  } catch (error) {
-    console.error("Error creating client:", error)
-    return {
-      isSuccess: false,
-      message: "Failed to create client"
-    }
-  }
+export async function createClientAction(data: CreateClientData) {
+	try {
+		const [newClient] = await db
+			.insert(clientsTable)
+			.values({
+				userId: data.userId,
+				name: data.name,
+				monthlySessions: data.monthlySessions,
+				sessionRate: data.sessionRate,
+				updatedAt: new Date(),
+			})
+			.returning();
+		return {
+			isSuccess: true,
+			message: "Client created successfully",
+			data: newClient,
+		};
+	} catch (error) {
+		console.error("Error creating client:", error);
+		return {
+			isSuccess: false,
+			message: "Failed to create client",
+		};
+	}
 }
 
 /**
@@ -100,26 +99,26 @@ export async function createClientAction(
  * @returns       - A promise resolving to an ActionState array of client records.
  */
 export async function getClientsAction(
-  userId: string
-): Promise<ActionState<any[]>> {
-  try {
-    const clients = await db
-      .select()
-      .from(clientsTable)
-      .where(eq(clientsTable.userId, userId))
+	userId: string,
+): Promise<ActionState<SelectClient[]>> {
+	try {
+		const clients = await db
+			.select()
+			.from(clientsTable)
+			.where(eq(clientsTable.userId, userId));
 
-    return {
-      isSuccess: true,
-      message: "Clients retrieved successfully",
-      data: clients
-    }
-  } catch (error) {
-    console.error("Error retrieving clients:", error)
-    return {
-      isSuccess: false,
-      message: "Failed to retrieve clients"
-    }
-  }
+		return {
+			isSuccess: true,
+			message: "Clients retrieved successfully",
+			data: clients,
+		};
+	} catch (error) {
+		console.error("Error retrieving clients:", error);
+		return {
+			isSuccess: false,
+			message: "Failed to retrieve clients",
+		};
+	}
 }
 
 /**
@@ -131,9 +130,9 @@ export async function getClientsAction(
  * @property sessionRate       - Updated session rate (optional).
  */
 interface UpdateClientData {
-  name?: string
-  monthlySessions?: number
-  sessionRate?: number
+	name?: string;
+	monthlySessions?: number;
+	sessionRate?: number;
 }
 
 /**
@@ -146,37 +145,38 @@ interface UpdateClientData {
  * @returns        - A promise resolving to an ActionState with the updated record on success.
  */
 export async function updateClientAction(
-  clientId: string,
-  userId: string,
-  data: UpdateClientData
-): Promise<ActionState<any>> {
-  try {
-    const [updated] = await db
-      .update(clientsTable)
-      .set(data)
-      .where(eq(clientsTable.id, clientId))
-      .where(eq(clientsTable.userId, userId))
-      .returning()
+	clientId: string,
+	userId: string,
+	data: UpdateClientData,
+): Promise<ActionState<SelectClient>> {
+	try {
+		const [updated] = await db
+			.update(clientsTable)
+			.set(data)
+			.where(
+				and(eq(clientsTable.id, clientId), eq(clientsTable.userId, userId)),
+			)
+			.returning();
 
-    if (!updated) {
-      return {
-        isSuccess: false,
-        message: "Client not found or update not applied."
-      }
-    }
+		if (!updated) {
+			return {
+				isSuccess: false,
+				message: "Client not found or update not applied.",
+			};
+		}
 
-    return {
-      isSuccess: true,
-      message: "Client updated successfully",
-      data: updated
-    }
-  } catch (error) {
-    console.error("Error updating client:", error)
-    return {
-      isSuccess: false,
-      message: "Failed to update client"
-    }
-  }
+		return {
+			isSuccess: true,
+			message: "Client updated successfully",
+			data: updated,
+		};
+	} catch (error) {
+		console.error("Error updating client:", error);
+		return {
+			isSuccess: false,
+			message: "Failed to update client",
+		};
+	}
 }
 
 /**
@@ -188,32 +188,33 @@ export async function updateClientAction(
  * @returns        - A promise resolving to an ActionState with `data: undefined` on success.
  */
 export async function deleteClientAction(
-  clientId: string,
-  userId: string
+	clientId: string,
+	userId: string,
 ): Promise<ActionState<void>> {
-  try {
-    const result = await db
-      .delete(clientsTable)
-      .where(eq(clientsTable.id, clientId))
-      .where(eq(clientsTable.userId, userId))
+	try {
+		const result = await db
+			.delete(clientsTable)
+			.where(
+				and(eq(clientsTable.id, clientId), eq(clientsTable.userId, userId)),
+			);
 
-    if (result.rowCount === 0) {
-      return {
-        isSuccess: false,
-        message: "Client not found or already deleted"
-      }
-    }
+		if (result.length === 0) {
+			return {
+				isSuccess: false,
+				message: "Client not found or already deleted",
+			};
+		}
 
-    return {
-      isSuccess: true,
-      message: "Client deleted",
-      data: undefined
-    }
-  } catch (error) {
-    console.error("Error deleting client:", error)
-    return {
-      isSuccess: false,
-      message: "Failed to delete client"
-    }
-  }
+		return {
+			isSuccess: true,
+			message: "Client deleted",
+			data: undefined,
+		};
+	} catch (error) {
+		console.error("Error deleting client:", error);
+		return {
+			isSuccess: false,
+			message: "Failed to delete client",
+		};
+	}
 }

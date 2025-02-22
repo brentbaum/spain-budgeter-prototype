@@ -27,7 +27,14 @@
  *  - We rely on the userId from Clerk to link each record to a specific therapist
  */
 
-import { pgTable, text, integer, numeric, timestamp, uuid } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  text,
+  integer,
+  numeric,
+  timestamp,
+  uuid
+} from "drizzle-orm/pg-core"
 
 /**
  * Defines the "clients" table, storing basic info about each therapist's clients.
@@ -54,9 +61,9 @@ export const clientsTable = pgTable("clients", {
   monthlySessions: integer("monthly_sessions").default(0).notNull(),
 
   /**
-   * Session rate, uses numeric(10,2) for monetary values
+   * Session rate in cents, 10 dollars is 1000.
    */
-  sessionRate: numeric("session_rate", 10, 2).default("0").notNull(),
+  sessionRate: integer("session_rate").default(0).notNull(),
 
   /**
    * Timestamp of creation
@@ -66,7 +73,9 @@ export const clientsTable = pgTable("clients", {
   /**
    * Timestamp of update, automatically updated on modification
    */
-  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateNow()
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
 })
 
 /**

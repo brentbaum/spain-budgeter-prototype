@@ -25,7 +25,14 @@
  *  - "cost" is stored as numeric(10,2) for monetary values
  */
 
-import { pgTable, text, numeric, timestamp, uuid } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  text,
+  numeric,
+  timestamp,
+  uuid,
+  integer
+} from "drizzle-orm/pg-core"
 
 /**
  * Defines the "professional_expenses" table, storing business-related expenses.
@@ -49,7 +56,7 @@ export const professionalExpensesTable = pgTable("professional_expenses", {
   /**
    * Monetary cost of this professional expense
    */
-  cost: numeric("cost", 10, 2).default("0").notNull(),
+  cost: integer("cost").default(0).notNull(),
 
   /**
    * Creation timestamp
@@ -59,15 +66,20 @@ export const professionalExpensesTable = pgTable("professional_expenses", {
   /**
    * Last update timestamp (auto-updates on changes)
    */
-  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateNow()
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date())
 })
 
 /**
  * Type for inserting a new professional expense record.
  */
-export type InsertProfessionalExpense = typeof professionalExpensesTable.$inferInsert
+export type InsertProfessionalExpense =
+  typeof professionalExpensesTable.$inferInsert
 
 /**
  * Type for selecting a professional expense record.
  */
-export type SelectProfessionalExpense = typeof professionalExpensesTable.$inferSelect
+export type SelectProfessionalExpense =
+  typeof professionalExpensesTable.$inferSelect

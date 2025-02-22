@@ -24,7 +24,14 @@
  *  - monthlySavingsGoal is numeric(10,2) to handle typical currency-like values
  */
 
-import { pgTable, text, numeric, timestamp, uuid } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  text,
+  numeric,
+  timestamp,
+  uuid,
+  integer
+} from "drizzle-orm/pg-core"
 
 /**
  * Defines the "therapist_settings" table for storing user-specific budget config.
@@ -43,9 +50,7 @@ export const therapistSettingsTable = pgTable("therapist_settings", {
   /**
    * The monthly savings goal (numeric, e.g., currency)
    */
-  monthlySavingsGoal: numeric("monthly_savings_goal", 10, 2)
-    .default("0")
-    .notNull(),
+  monthlySavingsGoal: integer("monthly_savings_goal").default(0).notNull(),
 
   /**
    * Creation timestamp
@@ -55,7 +60,10 @@ export const therapistSettingsTable = pgTable("therapist_settings", {
   /**
    * Last update timestamp (auto-updates on changes)
    */
-  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateNow()
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date())
 })
 
 /**

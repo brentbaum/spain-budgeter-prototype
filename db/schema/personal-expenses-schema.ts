@@ -25,7 +25,14 @@
  *  - "cost" is stored with numeric(10,2) for monetary values
  */
 
-import { pgTable, text, numeric, timestamp, uuid } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  text,
+  numeric,
+  timestamp,
+  uuid,
+  integer
+} from "drizzle-orm/pg-core"
 
 /**
  * Defines the "personal_expenses" table, storing non-business (personal) expense info.
@@ -47,9 +54,9 @@ export const personalExpensesTable = pgTable("personal_expenses", {
   description: text("description").notNull(),
 
   /**
-   * Monetary cost of this personal expense
+   * Monetary cost of this personal expense in cents
    */
-  cost: numeric("cost", 10, 2).default("0").notNull(),
+  cost: integer("cost").default(0).notNull(),
 
   /**
    * Record creation timestamp
@@ -59,7 +66,9 @@ export const personalExpensesTable = pgTable("personal_expenses", {
   /**
    * Record update timestamp (auto-updates on changes)
    */
-  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdateNow()
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
 })
 
 /**
